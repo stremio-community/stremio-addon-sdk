@@ -119,6 +119,18 @@ describe("AddonBuilder (zod) response validation", () => {
       expect(result).toEqual({ subtitles: [validSubtitle] });
     });
 
+    it("keeps the subtitle label", async () => {
+      const subtitle = { ...validSubtitle, label: "English [CC]" };
+      const builder = new AddonBuilder(basicManifest, {
+        validateResponses: true,
+      }).defineSubtitlesHandler(async () => ({ subtitles: [subtitle] }));
+
+      const result = await builder
+        .getInterface()
+        .get("subtitles", "movie", "tt1");
+      expect(result).toEqual({ subtitles: [subtitle] });
+    });
+
     it("validates manually-registered addon_catalog handler", async () => {
       const builder = new AddonBuilder(basicManifest, {
         validateResponses: true,
