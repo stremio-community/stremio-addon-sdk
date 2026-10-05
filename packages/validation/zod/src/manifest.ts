@@ -59,6 +59,8 @@ export const subtitleSchema = z.object({
   id: z.string(),
   /**
    * Url to the subtitle file.
+   * ASS/SSA subtitles are supported: serve the original file with a `.ass` or `.ssa` extension, or make sure it starts with the standard ASS sections (e.g. `[Script Info]`).
+   * Do not wrap ASS files in the `http://127.0.0.1:11470/subtitles.vtt?from=` URL, as converting them to VTT drops the styling.
    */
   url: z.string(),
   /**
@@ -99,7 +101,8 @@ export type StreamSourceSchema = z.infer<typeof streamSourceSchema>;
  */
 export const streamSchema = z.object({
   /**
-   * Direct URL to a video stream - http, https, rtmp protocols are supported.
+   * Direct http(s)/ftp(s)/rtmp link to a video stream.
+   * Protocol support can vary depending on client app capabilities.
    */
   url: z.string().optional(),
   /**
@@ -174,7 +177,7 @@ export const streamSchema = z.object({
   nzbUrl: z.string().optional(),
   /**
    * List of strings that each represent a connection to a NNTP (usenet) server (for nzbUrl) in the form of `nntp(s)://{user}:{pass}@{nntpDomain}:{nntpPort}/{nntpConnections}` (nntps = SSL; nntp = no encryption)
-   * @example `nntps://myuser:mypass@news.example.com/4`
+   * @example `nntps://myuser:mypass@news.example.com:563/4`
    */
   servers: z.array(z.string()).optional(),
   /**
