@@ -1,5 +1,19 @@
 # @stremio-addon/sdk
 
+## 1.1.0
+
+### Minor Changes
+
+- [#56](https://github.com/stremio-community/stremio-addon-sdk/pull/56) [`b4f7427`](https://github.com/stremio-community/stremio-addon-sdk/commit/b4f7427d916728371eadd3866d4d35bd9b669862) Thanks [@sleeyax](https://github.com/sleeyax)! - Support live TV and the Native EPG: the `epgProvider` manifest hint, the `date` catalog extra, `metasDetailed` catalog responses, the `isLive` / `hasScheduledVideos` meta hints, and programme fields on videos (`startTime`, `endTime`, `ratings`, ...).
+
+- [#54](https://github.com/stremio-community/stremio-addon-sdk/pull/54) [`de108c6`](https://github.com/stremio-community/stremio-addon-sdk/commit/de108c695cdfca573e808619acc2066e89eb9f53) Thanks [@cryingzeuss](https://github.com/cryingzeuss)! - Accept the `player` and `library` resources, which Stremio Core 0.64 sends playback and library events to, with typed handler extras and `definePlayerHandler` / `defineLibraryHandler`.
+
+- [#59](https://github.com/stremio-community/stremio-addon-sdk/pull/59) [`ab68f05`](https://github.com/stremio-community/stremio-addon-sdk/commit/ab68f055feb628576812d13554694dd0ac2acd70) Thanks [@sleeyax](https://github.com/sleeyax)! - Accept the optional subtitle `label`, shown in the subtitle picker instead of the language name.
+
+### Patch Changes
+
+- [#60](https://github.com/stremio-community/stremio-addon-sdk/pull/60) [`cf82842`](https://github.com/stremio-community/stremio-addon-sdk/commit/cf82842fe16c9b19a14a28b2da2a52445bf5b51b) Thanks [@sleeyax](https://github.com/sleeyax)! - Sync doc comments with the upstream protocol docs: `stream.url` protocols, the `stream.servers` example port, and ASS/SSA subtitle guidance on `subtitle.url`.
+
 ## 1.0.0
 
 ### Major Changes
