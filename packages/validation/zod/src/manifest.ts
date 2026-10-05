@@ -14,7 +14,7 @@ export type ShortManifestResourceSchema = z.infer<
   typeof shortManifestResourceSchema
 >;
 
-export const extraSchema = z.enum(["search", "genre", "skip"]);
+export const extraSchema = z.enum(["search", "genre", "skip", "date"]);
 export type ExtraSchema = z.infer<typeof extraSchema>;
 
 export const contentTypeSchema = z.enum(["movie", "series", "channel", "tv"]);
@@ -278,6 +278,24 @@ export const metaLinkSchema = z.object({
 });
 export type MetaLinkSchema = z.infer<typeof metaLinkSchema>;
 
+export const contentRatingSchema = z.object({
+  /**
+   * e.g. "PG"
+   */
+  value: z.string(),
+  /**
+   * Rating system the value belongs to.
+   *
+   * e.g. "TVPG"
+   */
+  system: z.string().optional(),
+  /**
+   * URL to an icon for the rating.
+   */
+  icon: z.string().optional(),
+});
+export type ContentRatingSchema = z.infer<typeof contentRatingSchema>;
+
 export const metaVideoSchema = z.object({
   /**
    * ID of the video.
@@ -337,6 +355,47 @@ export const metaVideoSchema = z.object({
    * Video overview/summary
    */
   overview: z.string().optional(),
+  /**
+   * ISO 8601 start of a live TV programme.
+   *
+   * Together with `endTime`, marks the video as a scheduled broadcast shown in the [Native EPG](https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/epg.md).
+   */
+  startTime: z.string().optional(),
+  /**
+   * ISO 8601 end of a live TV programme, strictly later than `startTime`.
+   */
+  endTime: z.string().optional(),
+  /**
+   * Human-readable duration.
+   *
+   * e.g. "45 min"
+   */
+  runtime: z.string().optional(),
+  /**
+   * Original air year.
+   *
+   * e.g. "2026"
+   */
+  releaseInfo: z.string().optional(),
+  /**
+   * Categories.
+   *
+   * e.g. ["News", "Sport"]
+   */
+  genres: z.array(z.string()).optional(),
+  /**
+   * Names of the cast.
+   */
+  cast: z.array(z.string()).optional(),
+  /**
+   * Names of the directors.
+   */
+  directors: z.array(z.string()).optional(),
+  links: z.array(metaLinkSchema).optional(),
+  /**
+   * Content ratings.
+   */
+  ratings: z.array(contentRatingSchema).optional(),
 });
 export type MetaVideoSchema = z.infer<typeof metaVideoSchema>;
 
@@ -414,6 +473,26 @@ export const metaPreviewSchema = z.object({
         type: z.enum(["Trailer", "Clip"]),
       }),
     )
+    .optional(),
+  behaviorHints: z
+    .object({
+      /**
+       * Set to a Video Object id in order to open the Detail page directly to that video's streams.
+       *
+       * Don't point this at a programme of a live channel: its playback identity is the channel itself.
+       */
+      defaultVideoId: z.string().optional(),
+      /**
+       * Marks the item as a live channel whose playback identity is the channel itself, independent of the programme currently airing.
+       *
+       * `type: "tv"` is treated as live even when this is omitted.
+       */
+      isLive: z.boolean().optional(),
+      /**
+       * Set to `true` when `videos` is a programme schedule ([Native EPG](https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/epg.md)) rather than a list of episodes or uploads.
+       */
+      hasScheduledVideos: z.boolean().optional(),
+    })
     .optional(),
 });
 export type MetaPreviewSchema = z.infer<typeof metaPreviewSchema>;
@@ -495,14 +574,6 @@ export const metaDetailSchema = metaPreviewSchema.extend({
    * URL to official website.
    */
   website: z.string().optional(),
-  behaviorHints: z
-    .object({
-      /**
-       * Set to a Video Object id in order to open the Detail page directly to that video's streams.
-       */
-      defaultVideoId: z.string().optional(),
-    })
-    .optional(),
 });
 export type MetaDetailSchema = z.infer<typeof metaDetailSchema>;
 
@@ -543,7 +614,7 @@ export const manifestExtraSchema = z.object({
    *
    * This name will be used in the extraProps argument itself.
    *
-   * @example "search", "genre", "skip"
+   * @example "search", "genre", "skip", "date"
    */
   name: z.string(),
   /**
@@ -744,6 +815,13 @@ export const manifestSchema = z.object({
        * Default is `false`. If set to `true`, the "Install" button will not show for your addon in Stremio. Instead a "Configure" button will show pointing to the `/configure` path on the addon's domain. For more information, read [User Data](https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/manifest.md#user-data) (or if you are not using the Addon SDK, read: [Advanced User Data](https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/advanced.md#using-user-data-in-addons) and [Creating Addon Configuration Pages](https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/advanced.md#creating-addon-configuration-pages))
        */
       configurationRequired: z.boolean().optional(),
+      /**
+       * Default is `false`. Set to `true` only if the addon returns a real live TV programme schedule, so Stremio shows the [Native EPG](https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/epg.md) layout.
+       *
+       * Requires a `tv` catalog that declares the `date` extra, and `meta.videos` entries with `startTime` / `endTime`.
+       * Leave it unset for live catalogs without a schedule.
+       */
+      epgProvider: z.boolean().optional(),
     })
     .optional(),
   stremioAddonsConfig: stremioAddonsConfigSchema.optional(),
@@ -761,9 +839,12 @@ export const metaResponseSchema = z
   .extend(cacheSchema.shape);
 export type MetaResponseSchema = z.infer<typeof metaResponseSchema>;
 
-export const catalogResponseSchema = z
-  .object({ metas: z.array(metaPreviewSchema) })
-  .extend(cacheSchema.shape);
+export const catalogResponseSchema = z.union([
+  z.object({ metas: z.array(metaPreviewSchema) }).extend(cacheSchema.shape),
+  z
+    .object({ metasDetailed: z.array(metaDetailSchema) })
+    .extend(cacheSchema.shape),
+]);
 export type CatalogResponseSchema = z.infer<typeof catalogResponseSchema>;
 
 export const subtitlesResponseSchema = z

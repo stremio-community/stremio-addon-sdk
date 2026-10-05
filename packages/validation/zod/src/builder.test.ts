@@ -75,6 +75,39 @@ describe("AddonBuilder (zod) response validation", () => {
       expect(result).toEqual({ metas: [validMeta] });
     });
 
+    it("keeps Native EPG fields in guide catalog responses", async () => {
+      const guide = {
+        metasDetailed: [
+          {
+            id: "exampletv:news",
+            type: "tv" as const,
+            name: "Example News",
+            behaviorHints: { isLive: true, hasScheduledVideos: true },
+            videos: [
+              {
+                id: "exampletv:news:epg:2026-09-12T18:00:00.000Z",
+                title: "Evening News",
+                released: "2026-09-12T18:00:00.000Z",
+                startTime: "2026-09-12T18:00:00.000Z",
+                endTime: "2026-09-12T18:45:00.000Z",
+                runtime: "45 min",
+                ratings: [{ value: "PG", system: "TVPG" }],
+              },
+            ],
+          },
+        ],
+        cacheMaxAge: 300,
+      };
+      const builder = new AddonBuilder(basicManifest, {
+        validateResponses: true,
+      }).defineCatalogHandler(async () => guide);
+
+      const result = await builder
+        .getInterface()
+        .get("catalog", "tv", "channels", { date: "2026-09-12" });
+      expect(result).toEqual(guide);
+    });
+
     it("validates subtitles responses", async () => {
       const builder = new AddonBuilder(basicManifest, {
         validateResponses: true,

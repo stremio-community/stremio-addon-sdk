@@ -8,7 +8,7 @@ export type ShortManifestResource =
   | "addon_catalog"
   | "player"
   | "library";
-export type Extra = "search" | "genre" | "skip";
+export type Extra = "search" | "genre" | "skip" | "date";
 export type ContentType = "movie" | "series" | "channel" | "tv";
 
 export type DefaultConfig = Record<string, any> | undefined;
@@ -34,6 +34,14 @@ export type CatalogHandlerExtra = {
    * If you return less than 100 items, Stremio will consider this to be the end of the catalog.
    */
   skip?: number;
+
+  /**
+   * UTC calendar day (`YYYY-MM-DD`) of the [Native EPG](https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/epg.md) guide page to load.
+   * Only sent for catalogs that declare the `date` extra, and only when Stremio loads the guide grid; channel-list requests omit it.
+   * Answer guide requests with `metasDetailed` instead of `metas`.
+   * Guide pagination ends on an empty `metasDetailed`, not on a short page.
+   */
+  date?: string;
 };
 
 /**
@@ -256,6 +264,26 @@ export interface MetaPreview {
    * @deprecated This will soon be deprecated in favor of `meta.trailers` being an array of Stream Objects.
    */
   trailers?: Array<{ source: string; type: "Trailer" | "Clip" }>;
+  behaviorHints?:
+    | {
+        /**
+         * Set to a Video Object id in order to open the Detail page directly to that video's streams.
+         *
+         * Don't point this at a programme of a live channel: its playback identity is the channel itself.
+         */
+        defaultVideoId?: string;
+        /**
+         * Marks the item as a live channel whose playback identity is the channel itself, independent of the programme currently airing.
+         *
+         * `type: "tv"` is treated as live even when this is omitted.
+         */
+        isLive?: boolean;
+        /**
+         * Set to `true` when `videos` is a programme schedule ([Native EPG](https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/epg.md)) rather than a list of episodes or uploads.
+         */
+        hasScheduledVideos?: boolean;
+      }
+    | undefined;
 }
 
 /**
@@ -343,14 +371,6 @@ export interface MetaDetail extends MetaPreview {
    * URL to official website.
    */
   website?: string;
-  behaviorHints?:
-    | {
-        /**
-         * Set to a Video Object id in order to open the Detail page directly to that video's streams.
-         */
-        defaultVideoId?: string;
-      }
-    | undefined;
 }
 
 export interface MetaLink {
@@ -430,6 +450,64 @@ export interface MetaVideo {
    * Video overview/summary
    */
   overview?: string;
+  /**
+   * ISO 8601 start of a live TV programme.
+   *
+   * Together with `endTime`, marks the video as a scheduled broadcast shown in the [Native EPG](https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/epg.md).
+   */
+  startTime?: string;
+  /**
+   * ISO 8601 end of a live TV programme, strictly later than `startTime`.
+   */
+  endTime?: string;
+  /**
+   * Human-readable duration.
+   *
+   * e.g. "45 min"
+   */
+  runtime?: string;
+  /**
+   * Original air year.
+   *
+   * e.g. "2026"
+   */
+  releaseInfo?: string;
+  /**
+   * Categories.
+   *
+   * e.g. ["News", "Sport"]
+   */
+  genres?: string[];
+  /**
+   * Names of the cast.
+   */
+  cast?: string[];
+  /**
+   * Names of the directors.
+   */
+  directors?: string[];
+  links?: MetaLink[];
+  /**
+   * Content ratings.
+   */
+  ratings?: ContentRating[];
+}
+
+export interface ContentRating {
+  /**
+   * e.g. "PG"
+   */
+  value: string;
+  /**
+   * Rating system the value belongs to.
+   *
+   * e.g. "TVPG"
+   */
+  system?: string;
+  /**
+   * URL to an icon for the rating.
+   */
+  icon?: string;
 }
 
 /**
@@ -743,6 +821,14 @@ export interface Manifest {
          * Default is `false`. If set to `true`, the "Install" button will not show for your addon in Stremio. Instead a "Configure" button will show pointing to the `/configure` path on the addon's domain. For more information, read [User Data](https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/manifest.md#user-data) (or if you are not using the Addon SDK, read: [Advanced User Data](https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/advanced.md#using-user-data-in-addons) and [Creating Addon Configuration Pages](https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/advanced.md#creating-addon-configuration-pages))
          */
         configurationRequired?: boolean;
+
+        /**
+         * Default is `false`. Set to `true` only if the addon returns a real live TV programme schedule, so Stremio shows the [Native EPG](https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/epg.md) layout.
+         *
+         * Requires a `tv` catalog that declares the `date` extra, and `meta.videos` entries with `startTime` / `endTime`.
+         * Leave it unset for live catalogs without a schedule.
+         */
+        epgProvider?: boolean;
       }
     | undefined;
 
@@ -858,7 +944,7 @@ export interface ManifestExtra {
    *
    * This name will be used in the extraProps argument itself.
    *
-   * @example "search", "genre", "skip"
+   * @example "search", "genre", "skip", "date"
    */
   name: string;
   /**
