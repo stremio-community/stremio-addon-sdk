@@ -5,7 +5,9 @@ export type ShortManifestResource =
   | "meta"
   | "stream"
   | "subtitles"
-  | "addon_catalog";
+  | "addon_catalog"
+  | "player"
+  | "library";
 export type Extra = "search" | "genre" | "skip";
 export type ContentType = "movie" | "series" | "channel" | "tv";
 
@@ -55,6 +57,47 @@ export type SubtitlesHandlerExtra = {
 };
 
 /**
+ * Extra properties for player event handlers.
+ *
+ * Stremio (core 0.64+) sends these events to every installed addon whose `player` resource
+ * matches the video's type and id prefix, and ignores the response body.
+ */
+export type PlayerHandlerExtra = {
+  /**
+   * `start` when playback begins or resumes, `pause` when it pauses, `stop` when the player
+   * closes or the video ends. A seek re-sends the current state with the new time.
+   */
+  action: "start" | "pause" | "stop";
+  /**
+   * Playback position in milliseconds, as the decimal string from the URL.
+   */
+  currentTime: string;
+  /**
+   * Video duration in milliseconds, as the decimal string from the URL. `0` when not known yet.
+   */
+  duration: string;
+};
+
+/**
+ * Extra properties for library event handlers.
+ *
+ * Stremio (core 0.64+) sends these events to every installed addon whose `library` resource
+ * matches the item's type and id prefix, and ignores the response body.
+ */
+export type LibraryHandlerExtra = {
+  /**
+   * `libraryAdd` and `libraryRemove` when the item enters or leaves the library,
+   * `watched` and `unwatched` when the item or some of its videos are marked.
+   */
+  action: "libraryAdd" | "libraryRemove" | "watched" | "unwatched";
+  /**
+   * For `watched` and `unwatched` on specific videos: their ids, comma-separated, at most 100
+   * per event. Absent when the whole item was marked.
+   */
+  videoId?: string;
+};
+
+/**
  * Maps handler types to their specific Extra types
  */
 export type HandlerExtraMap = {
@@ -63,6 +106,8 @@ export type HandlerExtraMap = {
   meta: DefaultHandlerExtra;
   stream: DefaultHandlerExtra;
   addon_catalog: DefaultHandlerExtra;
+  player: PlayerHandlerExtra;
+  library: LibraryHandlerExtra;
 };
 
 /**
@@ -110,6 +155,16 @@ export type AddonCatalogHandlerArgs<Config = DefaultConfig> = HandlerArgs<
   "addon_catalog",
   Config,
   DefaultHandlerExtra
+>;
+export type PlayerHandlerArgs<Config = DefaultConfig> = HandlerArgs<
+  "player",
+  Config,
+  PlayerHandlerExtra
+>;
+export type LibraryHandlerArgs<Config = DefaultConfig> = HandlerArgs<
+  "library",
+  Config,
+  LibraryHandlerExtra
 >;
 
 /**
