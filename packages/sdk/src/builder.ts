@@ -60,7 +60,9 @@ export class AddonBuilder {
   defineCatalogHandler<Config = DefaultConfig>(
     handler: (
       args: CatalogHandlerArgs<Config>,
-    ) => Promise<WithCache<{ metas: MetaPreview[] }>>,
+    ) => Promise<
+      WithCache<{ metas: MetaPreview[] } | { metasDetailed: MetaDetail[] }>
+    >,
   ): this {
     return this.defineResourceHandler("catalog", handler as Handler);
   }

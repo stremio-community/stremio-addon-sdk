@@ -215,6 +215,53 @@ describe("createRouter", () => {
         config: {},
       });
     });
+
+    it("routes Native EPG guide pages: /catalog/tv/channels/skip=100&date=2026-09-12.json", async () => {
+      const guide = {
+        metasDetailed: [
+          {
+            id: "exampletv:news",
+            type: "tv",
+            name: "Example News",
+            behaviorHints: { isLive: true, hasScheduledVideos: true },
+            videos: [
+              {
+                id: "exampletv:news:epg:2026-09-12T18:00:00.000Z",
+                title: "Evening News",
+                released: "2026-09-12T18:00:00.000Z",
+                startTime: "2026-09-12T18:00:00.000Z",
+                endTime: "2026-09-12T18:45:00.000Z",
+              },
+            ],
+          },
+        ],
+      };
+      const manifest: Manifest = {
+        ...basicManifest,
+        types: ["tv"],
+        catalogs: [
+          {
+            type: "tv",
+            id: "channels",
+            name: "Channels",
+            extra: [{ name: "skip" }, { name: "date" }],
+          },
+        ],
+        behaviorHints: { epgProvider: true },
+      };
+      const { addon, calls } = spyAddon(manifest, guide);
+      const router = createRouter(addon);
+
+      const res = await router(
+        new Request(
+          `${BASE}/catalog/tv/channels/skip=100&date=2026-09-12.json`,
+        ),
+      );
+
+      expect(res!.status).toBe(200);
+      expect(calls[0].extra).toEqual({ skip: "100", date: "2026-09-12" });
+      expect(await readJson(res!)).toEqual(guide);
+    });
   });
 
   describe("resource routes (errors)", () => {
