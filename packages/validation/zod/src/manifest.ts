@@ -7,6 +7,8 @@ export const shortManifestResourceSchema = z.enum([
   "stream",
   "subtitles",
   "addon_catalog",
+  "player",
+  "library",
 ]);
 export type ShortManifestResourceSchema = z.infer<
   typeof shortManifestResourceSchema
@@ -775,3 +777,9 @@ export const addonCatalogResponseSchema = z
 export type AddonCatalogResponseSchema = z.infer<
   typeof addonCatalogResponseSchema
 >;
+
+/**
+ * Stremio ignores the body of a `player` or `library` event response, so any object passes.
+ */
+export const eventResponseSchema = z.record(z.string(), z.unknown());
+export type EventResponseSchema = z.infer<typeof eventResponseSchema>;

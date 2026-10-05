@@ -188,6 +188,33 @@ describe("createRouter", () => {
 
       expect(calls[0].extra).toEqual({ genre: "Action" });
     });
+
+    it("routes player events: /player/series/tt1%3A1%3A1/action=start&currentTime=600000&duration=3600000.json", async () => {
+      const manifest: Manifest = {
+        ...basicManifest,
+        resources: [
+          ...basicManifest.resources,
+          { name: "player", types: ["series"], idPrefixes: ["tt"] },
+        ],
+      };
+      const { addon, calls } = spyAddon(manifest, { success: true });
+      const router = createRouter(addon);
+
+      const res = await router(
+        new Request(
+          `${BASE}/player/series/tt1%3A1%3A1/action=start&currentTime=600000&duration=3600000.json`,
+        ),
+      );
+
+      expect(res!.status).toBe(200);
+      expect(calls[0]).toEqual({
+        resource: "player",
+        type: "series",
+        id: "tt1:1:1",
+        extra: { action: "start", currentTime: "600000", duration: "3600000" },
+        config: {},
+      });
+    });
   });
 
   describe("resource routes (errors)", () => {

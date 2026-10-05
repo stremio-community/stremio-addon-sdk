@@ -8,6 +8,7 @@ import type z from "zod/v4";
 import {
   addonCatalogResponseSchema,
   catalogResponseSchema,
+  eventResponseSchema,
   manifestSchema,
   metaResponseSchema,
   streamResponseSchema,
@@ -40,6 +41,8 @@ const responseSchemas: Record<ShortManifestResource, z.ZodType> = {
   catalog: catalogResponseSchema,
   subtitles: subtitlesResponseSchema,
   addon_catalog: addonCatalogResponseSchema,
+  player: eventResponseSchema,
+  library: eventResponseSchema,
 };
 
 export class AddonBuilder extends BaseAddonBuilder {

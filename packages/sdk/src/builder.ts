@@ -3,11 +3,13 @@ import type {
   CatalogHandlerArgs,
   DefaultConfig,
   HandlerArgs,
+  LibraryHandlerArgs,
   Manifest,
   ManifestSchema,
   MetaDetail,
   MetaHandlerArgs,
   MetaPreview,
+  PlayerHandlerArgs,
   ShortManifestResource,
   Stream,
   StreamHandlerArgs,
@@ -69,6 +71,28 @@ export class AddonBuilder {
     ) => Promise<WithCache<{ subtitles: Subtitle[] }>>,
   ): this {
     return this.defineResourceHandler("subtitles", handler as Handler);
+  }
+
+  /**
+   * Receives playback events. Stremio ignores the response body, so return any object.
+   */
+  definePlayerHandler<Config = DefaultConfig>(
+    handler: (
+      args: PlayerHandlerArgs<Config>,
+    ) => Promise<Record<string, unknown>>,
+  ): this {
+    return this.defineResourceHandler("player", handler as Handler);
+  }
+
+  /**
+   * Receives library events. Stremio ignores the response body, so return any object.
+   */
+  defineLibraryHandler<Config = DefaultConfig>(
+    handler: (
+      args: LibraryHandlerArgs<Config>,
+    ) => Promise<Record<string, unknown>>,
+  ): this {
+    return this.defineResourceHandler("library", handler as Handler);
   }
 
   getInterface(): AddonInterface {
