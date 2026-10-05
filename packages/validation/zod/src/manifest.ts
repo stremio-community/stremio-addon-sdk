@@ -65,6 +65,12 @@ export const subtitleSchema = z.object({
    * Language code for the subtitle, if a valid ISO 639-2 code is not sent, the text of this value will be used instead.
    */
   lang: z.string(),
+  /**
+   * Label shown in the subtitle picker instead of the language name, useful when providing multiple subtitles for the same language.
+   * If omitted, the language name derived from `lang` is displayed.
+   * @example "English [CC]", "eng #1 [opensubtitles] 1080p.BluRay"
+   */
+  label: z.string().optional(),
 });
 export type SubtitleSchema = z.infer<typeof subtitleSchema>;
 
